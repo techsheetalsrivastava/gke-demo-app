@@ -1,7 +1,4 @@
-  
-                                     
-                      
-                                                            name: GKE CI/CD Pipeline
+name: GKE CI/CD Pipeline
 
 on:
   push:
@@ -54,4 +51,4 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl set image deployment/myapp myapp=$IMAGE
+          kubectl set image deployment/myapp gke-app=$IMAGE

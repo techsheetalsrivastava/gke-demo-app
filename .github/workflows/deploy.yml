@@ -13,7 +13,7 @@ env:
   PROJECT_ID: vm-demo-491408
   GKE_CLUSTER: my-standard-cluster
   GKE_ZONE: asia-south1-b
-  IMAGE: asia-south1-docker.pkg.dev/vm-demo-491408/my-repo/gke-app:latest
+  IMAGE: asia-south1-docker.pkg.dev/vm-demo-491408/my-repo/gke-app:${{ github.sha }}
   USE_GKE_GCLOUD_AUTH_PLUGIN: True
 
 jobs:
@@ -21,34 +21,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: "projects/216080715515/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
           service_account: "github-actions-sa@vm-demo-491408.iam.gserviceaccount.com"
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v2
 
-      - name: Install GKE auth plugin
-        run: |
-          gcloud components install gke-gcloud-auth-plugin --quiet
+      - run: gcloud components install gke-gcloud-auth-plugin --quiet
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker asia-south1-docker.pkg.dev
+      - run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
-      - name: Build and Push Docker Image
+      - name: Build & Push
         run: |
           docker build -t $IMAGE .
           docker push $IMAGE
 
-      - name: Get GKE credentials
+      - name: Get Credentials
         run: |
           gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
 
-      - name: Deploy to GKE
+      - name: Deploy
         run: |
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
           kubectl set image deployment/myapp gke-app=$IMAGE
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/myapp         
+                                 
+                                                             

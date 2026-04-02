@@ -1,4 +1,7 @@
-name: GKE CI/CD Pipeline
+  
+                                     
+                      
+                                                            name: GKE CI/CD Pipeline
 
 on:
   push:
@@ -14,6 +17,7 @@ env:
   GKE_CLUSTER: my-standard-cluster
   GKE_ZONE: asia-south1-b
   IMAGE: asia-south1-docker.pkg.dev/vm-demo-491408/my-repo/gke-app:latest
+  USE_GKE_GCLOUD_AUTH_PLUGIN: True
 
 jobs:
   deploy:

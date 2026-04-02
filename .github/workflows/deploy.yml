@@ -1,0 +1,45 @@
+name: GKE CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: vm-demo-491408
+  GKE_CLUSTER: my-standard-cluster
+  GKE_ZONE: asia-south1-b
+  IMAGE: asia-south1-docker.pkg.dev/vm-demo-491408/my-repo/gke-app:latest
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/216080715515/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "github-actions-sa@vm-demo-491408.iam.gserviceaccount.com"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
+
+      - name: Deploy to GKE
+        run: |
+          kubectl set image deployment/myapp myapp=$IMAGE
